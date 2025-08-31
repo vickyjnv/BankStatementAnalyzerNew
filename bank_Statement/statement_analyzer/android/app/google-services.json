@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "92803370851",
+    "project_id": "ipbp-statement-analyzer",
+    "storage_bucket": "ipbp-statement-analyzer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:92803370851:android:e8eb5c82dead157c938d56",
+        "android_client_info": {
+          "package_name": "com.example.statement_analyzer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "92803370851-v8u63q8jdlcjfpdo3784723n003di3r3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOqbKgz5ypedGYeFOWEBD_izeNLGKoMiI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "92803370851-v8u63q8jdlcjfpdo3784723n003di3r3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
