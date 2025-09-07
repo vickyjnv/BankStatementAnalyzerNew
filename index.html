@@ -30,7 +30,7 @@
         }
 
         .nav-button {
-            padding: 0.5rem 1.5rem;
+            padding: 0.25rem 1rem;
             font-weight: 600;
             border-radius: 0.5rem;
             transition: all 0.2s ease-in-out;
@@ -225,8 +225,8 @@
                             <path d="M3 3v18h18" />
                             <path d="M7 12v5h12V8l-5 5-4-4Z" />
                         </svg>
-                        <h1 class="text-xl font-bold text-gray-800 dark:text-gray-200 hidden sm:block">Statement
-                            Analyzer</h1>
+                        <h1 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
+                            Statement Analyzer</h1>
                     </div>
                     <div class="flex items-center p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
                         <button id="nav-ipbp" class="nav-button active">Post Office</button>
@@ -234,9 +234,9 @@
                     </div>
                     <!-- User ID and Logout Display -->
                     <div class="flex items-center gap-4">
-                        <div id="user-id-container"
-                            class="hidden text-sm text-gray-600 bg-gray-100 p-2 rounded-md truncate max-w-[150px] sm:max-w-none dark:bg-gray-700 dark:text-gray-300">
-                            <span id="user-id-display" class="font-medium"></span>
+                        <div id="user-profile-container" class="hidden items-center gap-3">
+                            <img id="user-profile-pic" class="h-8 w-8 rounded-full" src="" alt="User profile picture">
+                            <span id="user-display-name" class="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block"></span>
                         </div>
                         <button id="signout-btn"
                             class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md hover:bg-red-600 transition-colors">
@@ -251,6 +251,21 @@
         <main class="flex-grow">
             <!-- Post Office Bank Statement Analyzer -->
             <div id="app-ipbp">
+                <div id="ipbp-initial-loader"
+                    class="absolute inset-0 bg-white/70 dark:bg-gray-900/70 flex flex-col items-center justify-center z-20 hidden">
+                    <svg class="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Loading all transactions...</p>
+                    <div class="w-1/3 bg-gray-200 rounded-full h-2.5 mt-4 dark:bg-gray-700">
+                        <div id="ipbp-initial-progress" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="ipbp-progress-text" class="mt-2 text-sm text-gray-500 dark:text-gray-400">Initializing...</p>
+                </div>
                 <div id="ipbp-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 hidden lg:hidden overlay">
                 </div>
                 <div class="lg:flex min-h-screen">
@@ -1031,6 +1046,21 @@
 
             <!-- SBI Bank Statement Analyzer -->
             <div id="app-sbi" class="hidden-app">
+                <div id="sbi-initial-loader"
+                    class="absolute inset-0 bg-white/70 dark:bg-gray-900/70 flex flex-col items-center justify-center z-20 hidden">
+                    <svg class="animate-spin h-10 w-10 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <p class="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Loading all transactions...</p>
+                    <div class="w-1/3 bg-gray-200 rounded-full h-2.5 mt-4 dark:bg-gray-700">
+                        <div id="sbi-initial-progress" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="sbi-progress-text" class="mt-2 text-sm text-gray-500 dark:text-gray-400">Initializing...</p>
+                </div>
                 <div id="sbi-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 hidden lg:hidden overlay">
                 </div>
 
@@ -1901,7 +1931,8 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"; import { getFirestore, doc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc, writeBatch, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- GLOBAL APP STATE ---
         window.firebaseApp = null;
@@ -2130,6 +2161,9 @@
             trendChart: null,
             trendChartView: 'Monthly',
 
+            isInitialized: false,         // For lazy loading
+            isLoading: false,
+
             initFirestoreListeners() {
                 if (!window.db || !window.currentUserId || !window.currentAppId) {
                     console.warn("Firestore not ready for IPBPApp. Retrying...");
@@ -2137,39 +2171,12 @@
                     return;
                 }
 
-                const ipbpTransactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/ipbp_transactions`);
+                if (this.isInitialized) return; // Don't re-initialize
+                this.isInitialized = true;
+                console.log("Initializing IPBP App listeners for the first time.");
+
                 const subCategoriesRef = collection(window.db, `artifacts/${window.currentAppId}/public/data/sub_categories`);
                 const vpaMappingsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/ipbp_vpa_subcategory_mappings`);
-
-                onSnapshot(ipbpTransactionsRef, (snapshot) => {
-                    const transactionsFromDb = [];
-                    const uniqueKeysFromDb = new Set();
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const uniqueKey = `${data.transactionDate}|${data.description}|${data.debit}|${data.credit}`;
-                        uniqueKeysFromDb.add(uniqueKey);
-                        transactionsFromDb.push({ id: doc.id, ...data });
-                    });
-                    this.allTransactions = transactionsFromDb;
-                    this.uniqueTransactionSet = uniqueKeysFromDb;
-                    this.allTransactions.sort((a, b) => b.transactionTimestamp.toDate() - a.transactionTimestamp.toDate());
-                    this.reapplyMappingsAndFilter();
-                    this.populateAllDropdowns();
-                    this.renderSubCategoryManagementList();
-                    this.updateDashboard();
-                    console.log("IPBP Transactions updated from Firestore.");
-                    if (this.allTransactions.length > 0) {
-                        document.getElementById('ipbp-data-container').classList.remove('hidden');
-                        document.getElementById('ipbp-filter-controls').classList.remove('hidden');
-                        document.getElementById('ipbp-dashboard').classList.remove('hidden');
-                    } else {
-                        document.getElementById('ipbp-data-container').classList.add('hidden');
-                        document.getElementById('ipbp-dashboard').classList.add('hidden');
-                    }
-                }, (error) => {
-                    console.error("Error listening to IPBP transactions:", error);
-                    this.showError("Failed to load IPBP transactions from cloud. Please try again.");
-                });
 
                 onSnapshot(subCategoriesRef, (snapshot) => {
                     const subCatsFromDb = [];
@@ -2191,18 +2198,87 @@
                     this.populateAllDropdowns(); // Refresh dropdowns with new emojis
                     console.log("IPBP VPA mappings updated from Firestore:", this.vpaSubcategoryMap);
                 }, (error) => console.error("Error listening to IPBP VPA mappings:", error));
+                
+                this.loadAllData();
+            },
+
+            async loadAllData() {
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                const loader = document.getElementById('ipbp-initial-loader');
+                const progressBar = document.getElementById('ipbp-initial-progress');
+                const progressText = document.getElementById('ipbp-progress-text');
+                loader.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Initializing...';
+
+                const transactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/ipbp_transactions`);
+                this.allTransactions = [];
+                this.uniqueTransactionSet.clear();
+
+                let lastVisible = null;
+                const CHUNK_SIZE = 500;
+                let hasMore = true;
+                let totalFetched = 0;
+
+                progressText.textContent = 'Fetching transactions...';
+
+                while (hasMore) {
+                    let q = query(transactionsRef, orderBy("transactionTimestamp", "desc"), limit(CHUNK_SIZE));
+                    if (lastVisible) {
+                        q = query(transactionsRef, orderBy("transactionTimestamp", "desc"), startAfter(lastVisible), limit(CHUNK_SIZE));
+                    }
+
+                    try {
+                        const snapshot = await getDocs(q);
+                        if (snapshot.empty) { hasMore = false; break; }
+                        
+                        this.allTransactions.push(...snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                        hasMore = snapshot.docs.length === CHUNK_SIZE;
+                        totalFetched += snapshot.docs.length;
+
+                        const progress = Math.min(95, (totalFetched / (totalFetched + (hasMore ? CHUNK_SIZE : 0))) * 100);
+                        progressBar.style.width = `${progress}%`;
+                        progressText.textContent = `Loaded ${totalFetched} transactions...`;
+                    } catch (e) {
+                        console.error("Error fetching all transactions chunk", e);
+                        this.showError("Failed to load all transactions.");
+                        hasMore = false;
+                    }
+                }
+
+                progressBar.style.width = '100%';
+                progressText.textContent = `Loaded ${this.allTransactions.length} transactions. Finalizing...`;
+                this.uniqueTransactionSet = new Set(this.allTransactions.map(t => `${t.transactionDate}|${t.description}|${t.debit}|${t.credit}`));
+                this.reapplyMappingsAndFilter();
+                this.populateAllDropdowns();
+                this.renderSubCategoryManagementList();
+                if (this.allTransactions.length > 0) {
+                    document.getElementById('ipbp-data-container').classList.remove('hidden');
+                    document.getElementById('ipbp-filter-controls').classList.remove('hidden');
+                    document.getElementById('ipbp-dashboard').classList.remove('hidden');
+                }
+                setTimeout(() => { loader.classList.add('hidden'); this.isLoading = false; }, 500);
             },
 
             reapplyMappingsAndFilter() {
                 this.allTransactions.forEach(t => {
-                    if (t.vpa && this.vpaSubcategoryMap[t.vpa]) {
-                        t.subCategory = this.vpaSubcategoryMap[t.vpa];
-                    } else if (t.vpa) {
-                        t.subCategory = 'N/A';
+                    const newSubCategory = this.vpaSubcategoryMap[t.vpa];
+                    if (t.vpa && newSubCategory) {
+                        if (t.subCategory !== newSubCategory) {
+                            t.subCategory = newSubCategory;
+                            t._isDirty = true; // Mark as needing a DB update
+                        }
+                    } else if (t.vpa) { // This handles when a mapping is removed
+                        if (t.subCategory && t.subCategory !== 'N/A') {
+                            t.subCategory = 'N/A';
+                            t._isDirty = true;
+                        }
                     }
                 });
                 this.filterTransactions();
-                this.updateDashboard(); // Mappings might affect dashboard charts
             },
 
             parseAmount(amount) {
@@ -3357,6 +3433,9 @@
             trendChart: null,
             trendChartView: 'Monthly',
 
+            isInitialized: false,         // For lazy loading
+            isLoading: false,             // To prevent re-entrant loading
+
             initFirestoreListeners() {
                 if (!window.db || !window.currentUserId || !window.currentAppId) {
                     console.warn("Firestore not ready for SBIApp. Retrying...");
@@ -3364,36 +3443,12 @@
                     return;
                 }
 
-                const sbiTransactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/sbi_transactions`);
+                if (this.isInitialized) return;
+                this.isInitialized = true;
+                console.log("Initializing SBI App listeners for the first time.");
+
                 const subCategoriesRef = collection(window.db, `artifacts/${window.currentAppId}/public/data/sub_categories`);
                 const vpaMappingsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/sbi_vpa_subcategory_mappings`);
-
-                onSnapshot(sbiTransactionsRef, (snapshot) => {
-                    const transactionsFromDb = [];
-                    const uniqueKeysFromDb = new Set();
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const uniqueKey = `${data.transactionDate}|${data.description}|${data.debit}|${data.credit}`;
-                        uniqueKeysFromDb.add(uniqueKey);
-                        transactionsFromDb.push({ id: doc.id, ...data });
-                    });
-                    this.allTransactions = transactionsFromDb;
-                    this.uniqueTransactionSet = uniqueKeysFromDb;
-                    this.allTransactions.sort((a, b) => b.transactionTimestamp.toDate() - a.transactionTimestamp.toDate());
-                    this.reapplyMappingsAndFilter();
-                    this.populateAllDropdowns();
-                    this.renderSubCategoryManagementList();
-                    this.updateDashboard();
-                    console.log("SBI Transactions updated from Firestore.");
-                    if (this.allTransactions.length > 0) {
-                        document.getElementById('sbi-data-container').classList.remove('hidden');
-                        document.getElementById('sbi-filter-controls').classList.remove('hidden');
-                        document.getElementById('sbi-dashboard').classList.remove('hidden');
-                    } else {
-                        document.getElementById('sbi-data-container').classList.add('hidden');
-                        document.getElementById('sbi-dashboard').classList.add('hidden');
-                    }
-                }, (error) => console.error("Error listening to SBI transactions:", error));
 
                 onSnapshot(subCategoriesRef, (snapshot) => {
                     this.subCategories = snapshot.docs.map(doc => doc.data().name);
@@ -3411,17 +3466,87 @@
                     this.reapplyMappingsAndFilter();
                     this.populateAllDropdowns(); // Refresh dropdowns with new emojis
                 }, (error) => console.error("Error listening to SBI VPA mappings:", error));
+
+                this.loadAllData();
+            },
+
+            async loadAllData() {
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                const loader = document.getElementById('sbi-initial-loader');
+                const progressBar = document.getElementById('sbi-initial-progress');
+                const progressText = document.getElementById('sbi-progress-text');
+                loader.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Initializing...';
+
+                const transactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/sbi_transactions`);
+                this.allTransactions = [];
+                this.uniqueTransactionSet.clear();
+
+                let lastVisible = null;
+                const CHUNK_SIZE = 500;
+                let hasMore = true;
+                let totalFetched = 0;
+
+                progressText.textContent = 'Fetching transactions...';
+
+                while (hasMore) {
+                    let q = query(transactionsRef, orderBy("transactionTimestamp", "desc"), limit(CHUNK_SIZE));
+                    if (lastVisible) {
+                        q = query(transactionsRef, orderBy("transactionTimestamp", "desc"), startAfter(lastVisible), limit(CHUNK_SIZE));
+                    }
+
+                    try {
+                        const snapshot = await getDocs(q);
+                        if (snapshot.empty) { hasMore = false; break; }
+
+                        this.allTransactions.push(...snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+                        hasMore = snapshot.docs.length === CHUNK_SIZE;
+                        totalFetched += snapshot.docs.length;
+
+                        const progress = Math.min(95, (totalFetched / (totalFetched + (hasMore ? CHUNK_SIZE : 0))) * 100);
+                        progressBar.style.width = `${progress}%`;
+                        progressText.textContent = `Loaded ${totalFetched} transactions...`;
+
+                    } catch (e) {
+                        console.error("Error fetching all SBI transactions chunk", e);
+                        this.showError("Failed to load all SBI transactions.");
+                        hasMore = false;
+                    }
+                }
+
+                progressBar.style.width = '100%';
+                progressText.textContent = `Loaded ${this.allTransactions.length} transactions. Finalizing...`;
+                this.uniqueTransactionSet = new Set(this.allTransactions.map(t => `${t.transactionDate}|${t.description}|${t.debit}|${t.credit}`));
+                this.reapplyMappingsAndFilter();
+                this.populateAllDropdowns();
+                this.renderSubCategoryManagementList();
+                if (this.allTransactions.length > 0) {
+                    document.getElementById('sbi-data-container').classList.remove('hidden');
+                    document.getElementById('sbi-filter-controls').classList.remove('hidden');
+                    document.getElementById('sbi-dashboard').classList.remove('hidden');
+                }
+                setTimeout(() => { loader.classList.add('hidden'); this.isLoading = false; }, 500);
             },
             reapplyMappingsAndFilter() {
                 this.allTransactions.forEach(t => {
-                    if (t.vpa && this.vpaSubcategoryMap[t.vpa]) {
-                        t.subCategory = this.vpaSubcategoryMap[t.vpa];
+                    const newSubCategory = this.vpaSubcategoryMap[t.vpa];
+                    if (t.vpa && newSubCategory) {
+                        if (t.subCategory !== newSubCategory) {
+                            t.subCategory = newSubCategory;
+                            t._isDirty = true;
+                        }
                     } else if (t.vpa) {
-                        t.subCategory = 'N/A';
+                        if (t.subCategory && t.subCategory !== 'N/A') {
+                            t.subCategory = 'N/A';
+                            t._isDirty = true;
+                        }
                     }
                 });
                 this.filterTransactions();
-                this.updateDashboard();
             },
             parseSBIParticulars(particulars, debitAmount, creditAmount) {
                 const details = {
@@ -3831,67 +3956,28 @@
                 });
             },
 
-            async backgroundUpdateTransactions(vpa, subCategory) {
-                const transactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/sbi_transactions`);
-                // Filter only transactions that need updating to avoid unnecessary writes
-                // We filter only by name to avoid a race condition where the local subCategory is updated by onSnapshot before this function can find the documents to update in Firestore.
-                const transactionsToUpdate = this.allTransactions.filter(t => t.vpa === vpa);
-
-                if (transactionsToUpdate.length === 0) {
-                    console.log("No transactions require updating for VPA:", vpa);
-                    return;
-                }
-
-                console.log(`Starting non-blocking background update for ${transactionsToUpdate.length} transactions for VPA: ${vpa}`);
-
-                const BATCH_LIMIT = 100; // Smaller batches are better for UI responsiveness
-                let i = 0;
-
-                const processNextChunk = async () => {
-                    if (i >= transactionsToUpdate.length) {
-                        console.log(`Successfully finished background update for VPA: ${vpa}.`);
-                        return;
-                    }
-
-                    const batch = writeBatch(window.db);
-                    const chunk = transactionsToUpdate.slice(i, i + BATCH_LIMIT);
-
-                    chunk.forEach(t => {
-                        const docRef = doc(transactionsRef, t.id);
-                        batch.update(docRef, { subCategory: subCategory });
-                    });
-
-                    try {
-                        await batch.commit();
-                        i += BATCH_LIMIT;
-                        requestAnimationFrame(processNextChunk); // Yield to browser before next chunk
-                    } catch (error) {
-                        console.error("Error during background batch update for VPA:", error);
-                        this.showError("A background update task failed. Some data may be out of sync.");
-                    }
-                };
-
-                requestAnimationFrame(processNextChunk); // Start the process
-            },
-
             async batchUpdateAllSubCategories() {
-                this.showLoading(true, 'Applying all mappings to transactions...');
+                const loader = document.getElementById('sbi-initial-loader');
+                const progressBar = document.getElementById('sbi-initial-progress');
+                const progressText = document.getElementById('sbi-progress-text');
+
                 const transactionsRef = collection(window.db, `artifacts/${window.currentAppId}/users/${window.currentUserId}/sbi_transactions`);
                 const BATCH_LIMIT = 499;
 
-                // Find all transactions that have a VPA that exists in our mapping table.
-                // We will update them all to ensure they are in sync with the latest mappings.
-                const transactionsToUpdate = this.allTransactions.filter(t =>
-                    t.vpa && this.vpaSubcategoryMap.hasOwnProperty(t.vpa)
-                );
+                const transactionsToUpdate = this.allTransactions.filter(t => t._isDirty);
 
                 if (transactionsToUpdate.length === 0) {
-                    this.showLoading(false);
-                    alert("No transactions found with applicable sub-category mappings.");
+                    alert("All transactions are already up-to-date with the current sub-category mappings.");
                     return;
                 }
 
+                loader.querySelector('p').textContent = 'Applying Mappings...';
+                loader.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = `Found ${transactionsToUpdate.length} transactions to update.`;
+
                 console.log(`Found ${transactionsToUpdate.length} SBI transactions to update with new sub-category mappings.`);
+                let updatedCount = 0;
 
                 try {
                     for (let i = 0; i < transactionsToUpdate.length; i += BATCH_LIMIT) {
@@ -3899,16 +3985,25 @@
                         const chunk = transactionsToUpdate.slice(i, i + BATCH_LIMIT);
                         chunk.forEach(t => {
                             const docRef = doc(transactionsRef, t.id);
-                            batch.update(docRef, { subCategory: this.vpaSubcategoryMap[t.vpa] });
+                            batch.update(docRef, { subCategory: t.subCategory });
+                            t._isDirty = false; // Clear the flag
                         });
                         await batch.commit();
+
+                        updatedCount += chunk.length;
+                        const progress = (updatedCount / transactionsToUpdate.length) * 100;
+                        progressBar.style.width = `${progress}%`;
+                        progressText.textContent = `Updated ${updatedCount} of ${transactionsToUpdate.length} transactions...`;
+
                         console.log(`Firebase batch commit successful for ${chunk.length} SBI transactions.`);
                     }
                     alert(`Successfully updated ${transactionsToUpdate.length} transactions in Firestore.`);
                 } catch (error) {
                     console.error("Error during SBI batch update:", error);
                     this.showError("Failed to update sub-categories in the database.");
-                } finally { this.showLoading(false); }
+                } finally {
+                    setTimeout(() => { loader.classList.add('hidden'); }, 500);
+                }
             },
 
             renderSubCategoryManagementList() {
@@ -4506,17 +4601,21 @@
                 onAuthStateChanged(window.auth, (user) => {
                     if (user) {
                         window.currentUserId = user.uid;
-                        document.getElementById('user-id-display').innerText = `User ID: ${window.currentUserId}`;
-                        document.getElementById('user-id-container').classList.remove('hidden');
+                        document.getElementById('user-profile-pic').src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`;
+                        document.getElementById('user-display-name').innerText = user.displayName || 'User';
+                        const profileContainer = document.getElementById('user-profile-container');
+                        profileContainer.classList.remove('hidden');
+                        profileContainer.classList.add('flex');
+
                         document.getElementById('login-page').classList.add('hidden');
                         document.getElementById('main-app').classList.remove('hidden');
                         console.log("User signed in:", user.uid);
 
+                        // Lazy load: only initialize the active app (IPBP by default)
                         window.IPBPApp.initFirestoreListeners();
-                        window.SBIApp.initFirestoreListeners();
                     } else {
                         window.currentUserId = null;
-                        document.getElementById('user-id-container').classList.add('hidden');
+                        document.getElementById('user-profile-container').classList.add('hidden');
                         document.getElementById('login-page').classList.remove('hidden');
                         document.getElementById('main-app').classList.add('hidden');
                         console.log("No user signed in.");
@@ -4544,6 +4643,11 @@
                 document.getElementById('app-sbi').classList.toggle('hidden-app', viewName !== 'sbi');
                 document.getElementById('nav-ipbp').classList.toggle('active', viewName === 'ipbp');
                 document.getElementById('nav-sbi').classList.toggle('active', viewName === 'sbi');
+
+                // Lazy load the other app if it hasn't been initialized yet
+                if (viewName === 'sbi' && !window.SBIApp.isInitialized) {
+                    window.SBIApp.initFirestoreListeners();
+                }
             }
             document.getElementById('nav-ipbp').addEventListener('click', () => switchView('ipbp'));
             document.getElementById('nav-sbi').addEventListener('click', () => switchView('sbi'));
@@ -4668,10 +4772,7 @@
                     } else {
                         await addDoc(vpaMappingsRef, { vpa, subCategory, timestamp: new Date() });
                     }
-                    // Close modal immediately for better UX. Update runs in background.
                     IPBPApp.hideModal('ipbp-map-vpa-modal', 'ipbp-map-vpa-form');
-                    // Start the non-blocking background update.
-                    IPBPApp.backgroundUpdateTransactions(vpa, subCategory);
                 }
             });
             document.getElementById('ipbp-cancel-map-vpa-btn').addEventListener('click', () => IPBPApp.hideModal('ipbp-map-vpa-modal', 'ipbp-map-vpa-form'));
@@ -4816,10 +4917,7 @@
                     } else {
                         await addDoc(vpaMappingsRef, { vpa, subCategory, timestamp: new Date() });
                     }
-                    // Close modal immediately for better UX. Update runs in background.
                     SBIApp.hideModal('sbi-map-vpa-modal', 'sbi-map-vpa-form');
-                    // Start the non-blocking background update.
-                    SBIApp.backgroundUpdateTransactions(vpa, subCategory); // Here 'vpa' correctly holds the name/particulars
                 }
             });
             document.getElementById('sbi-cancel-map-vpa-btn').addEventListener('click', () => SBIApp.hideModal('sbi-map-vpa-modal', 'sbi-map-vpa-form'));
