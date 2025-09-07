@@ -67,6 +67,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '92803370851',
     projectId: 'ipbp-statement-analyzer',
     storageBucket: 'ipbp-statement-analyzer.firebasestorage.app',
+    androidClientId: '92803370851-2kmihvuc0svhjbd5dk616r4fu30uc912.apps.googleusercontent.com',
     iosClientId: '92803370851-9pggqi371btllim5is5qrsl6n2c94qmb.apps.googleusercontent.com',
     iosBundleId: 'com.example.statementAnalyzer',
   );
@@ -77,7 +78,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '92803370851',
     projectId: 'ipbp-statement-analyzer',
     storageBucket: 'ipbp-statement-analyzer.firebasestorage.app',
+    androidClientId: '92803370851-2kmihvuc0svhjbd5dk616r4fu30uc912.apps.googleusercontent.com',
     iosClientId: '92803370851-9pggqi371btllim5is5qrsl6n2c94qmb.apps.googleusercontent.com',
     iosBundleId: 'com.example.statementAnalyzer',
   );
+
 }

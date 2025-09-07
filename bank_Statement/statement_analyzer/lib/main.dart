@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Bank Statement Analyzer',
       theme: ThemeData(
+        brightness: Brightness.light,
         primarySwatch: Colors.indigo,
         fontFamily: 'Inter',
         useMaterial3: true,
@@ -35,6 +36,20 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.indigo,
+        fontFamily: 'Inter',
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[900],
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      themeMode: ThemeMode.system,
       home: const AuthWrapper(),
     );
   }
@@ -162,6 +177,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
@@ -175,72 +191,113 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  void _toggleThemeMode() {
+    setState(() {
+      if (_themeMode == ThemeMode.light) {
+        _themeMode = ThemeMode.dark;
+      } else if (_themeMode == ThemeMode.dark) {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.dark;
+      }
+    });
+    // Use InheritedWidget or Provider for global theme change in a real app
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Statement Analyzer'),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        actions: [
-          if (user != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Chip(
-                avatar: user.photoURL != null
-                    ? CircleAvatar(
-                        backgroundImage: NetworkImage(user.photoURL!),
-                      )
-                    : null,
-                label: Text(user.displayName ?? 'No Name'),
-              ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await GoogleSignIn().signOut();
-              await FirebaseAuth.instance.signOut();
-            },
+    return MaterialApp(
+      title: 'Bank Statement Analyzer',
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primarySwatch: Colors.indigo,
+        fontFamily: 'Inter',
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[100],
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Post Office'),
-            Tab(text: 'SBI'),
-          ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          BankDataScreen(bankType: 'ipbp'),
-          BankDataScreen(bankType: 'sbi'),
-        ],
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.indigo,
+        fontFamily: 'Inter',
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[900],
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      themeMode: _themeMode,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Statement Analyzer'),
+          elevation: 1,
+          actions: [
+            IconButton(
+              icon: Icon(
+                _themeMode == ThemeMode.dark
+                    ? Icons.light_mode
+                    : Icons.dark_mode,
+              ),
+              tooltip: 'Toggle Light/Dark Mode',
+              onPressed: _toggleThemeMode,
+            ),
+            if (user != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Chip(
+                  avatar: user.photoURL != null
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(user.photoURL!),
+                        )
+                      : null,
+                  label: Text(user.displayName ?? 'No Name'),
+                ),
+              ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await GoogleSignIn().signOut();
+                await FirebaseAuth.instance.signOut();
+              },
+            ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Post Office'),
+              Tab(text: 'SBI'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children: const [
+            BankDataScreen(bankType: 'ipbp'),
+            BankDataScreen(bankType: 'sbi'),
+          ],
+        ),
       ),
     );
   }
 }
 
 // Helper functions moved outside the state to be accessible by DataGridSource
-DateTime? _parseDate(String? dateStr) {
-  if (dateStr == null) return null;
-  try {
-    return DateFormat('dd-MMM-yy').parse(dateStr);
-  } catch (_) {}
-  try {
-    return DateFormat('dd/MM/yyyy').parse(dateStr);
-  } catch (_) {}
-  return null;
-}
-
 String _formatDate(dynamic dateValue) {
   if (dateValue == null) return '';
   if (dateValue is Timestamp) {
     return DateFormat('dd-MMM-yy').format(dateValue.toDate());
   }
-  final date = _parseDate(dateValue.toString());
+  // Handles string dates like 'YYYY-MM-DD'
+  final date = DateTime.tryParse(dateValue.toString());
   return date != null
       ? DateFormat('dd-MMM-yy').format(date)
       : dateValue.toString();
@@ -249,69 +306,46 @@ String _formatDate(dynamic dateValue) {
 class TransactionDataGridSource extends DataGridSource {
   TransactionDataGridSource({
     required List<Map<String, dynamic>> transactions,
-    required String bankType,
   }) {
     _transactions = transactions;
-    _bankType = bankType;
     _dataGridRows = _transactions.map<DataGridRow>((transaction) {
-      final isIpbp = _bankType == 'ipbp';
-      final parsed = transaction['parsed'] as Map<String, dynamic>? ?? {};
       return DataGridRow(
         cells: [
           DataGridCell<String>(
             columnName: 'Date',
-            value: _formatDate(transaction[isIpbp ? 'DATE' : 'date']),
+            value: _formatDate(transaction['transactionTimestamp']),
           ),
           DataGridCell<String>(
-            columnName: isIpbp
-                ? 'Original Particulars'
-                : 'Original Description',
-            value:
-                transaction[isIpbp ? 'TRANSACTION PARTICULARS' : 'description']
-                    ?.toString(),
+            columnName: 'Description',
+            value: transaction['description']?.toString(),
           ),
           DataGridCell<String>(
-            columnName: 'Parsed Particulars',
-            value:
-                parsed['name']?.toString() ?? parsed['description']?.toString(),
+            columnName: 'Particulars',
+            value: transaction['particulars']?.toString(),
           ),
           DataGridCell<String>(
             columnName: 'Category',
-            value: parsed['category']?.toString(),
+            value: transaction['category']?.toString(),
           ),
           DataGridCell<String>(
             columnName: 'Sub-Category',
-            value: parsed['subCategory']?.toString(),
+            value: transaction['subCategory']?.toString(),
           ),
           DataGridCell<String>(
             columnName: 'VPA',
-            value: parsed['vpa']?.toString(),
+            value: transaction['vpa']?.toString(),
           ),
           DataGridCell<double>(
             columnName: 'Debit',
-            value:
-                double.tryParse(
-                  transaction[isIpbp ? 'WITHDRWAL' : 'debit']?.toString() ??
-                      '0',
-                ) ??
-                0,
+            value: (transaction['debit'] as num? ?? 0).toDouble(),
           ),
           DataGridCell<double>(
             columnName: 'Credit',
-            value:
-                double.tryParse(
-                  transaction[isIpbp ? 'DEPOSIT' : 'credit']?.toString() ?? '0',
-                ) ??
-                0,
+            value: (transaction['credit'] as num? ?? 0).toDouble(),
           ),
           DataGridCell<double>(
             columnName: 'Balance',
-            value:
-                double.tryParse(
-                  transaction[isIpbp ? 'BALANCE' : 'balance']?.toString() ??
-                      '0',
-                ) ??
-                0,
+            value: (transaction['balance'] as num? ?? 0).toDouble(),
           ),
         ],
       );
@@ -319,20 +353,16 @@ class TransactionDataGridSource extends DataGridSource {
   }
 
   late List<Map<String, dynamic>> _transactions;
-  late String _bankType;
   List<DataGridRow> _dataGridRows = [];
 
   @override
   List<DataGridRow> get rows => _dataGridRows;
 
-  Map<String, dynamic> getTransactionAt(int index) => _transactions[index];
-
   @override
   DataGridRowAdapter buildRow(DataGridRow row) {
     final int rowIndex = rows.indexOf(row);
     final transaction = _transactions[rowIndex];
-    final parsed = transaction['parsed'] as Map<String, dynamic>? ?? {};
-    final subCategory = parsed['subCategory']?.toString() ?? 'N/A';
+    final subCategory = transaction['subCategory']?.toString() ?? 'N/A';
 
     return DataGridRowAdapter(
       cells: row.getCells().map<Widget>((dataGridCell) {
@@ -418,8 +448,8 @@ class _BankDataScreenState extends State<BankDataScreen> {
   List<String> _subCategories = [];
   bool _isLoading = true;
   int _currentPage = 0;
-  int _rowsPerPage = 20;
-  final List<int> _rowsPerPageOptions = [10, 20, 50, 100];
+  int _rowsPerPage = 50;
+  final List<int> _rowsPerPageOptions = [10, 20, 50, 100, 500];
   int? _sortColumnIndex;
   bool _sortAscending = true;
   late Map<String, bool> _columnVisibility;
@@ -434,9 +464,36 @@ class _BankDataScreenState extends State<BankDataScreen> {
       _selectedDay,
       _selectedCategory,
       _selectedSubCategory,
+      _selectedVpa,
       _selectedType;
 
   late TransactionDataGridSource _dataGridSource;
+
+  // Emoji mapping for sub-categories
+  final Map<String, String> _subCategoryEmojiMap = {
+    'Food': '🍔',
+    'Shopping': '🛍️',
+    'Bills': '🧾',
+    'Travel': '✈️',
+    'Entertainment': '🎬',
+    'Groceries': '🛒',
+    'Health': '💊',
+    'Salary': '💰',
+    'Investment': '📈',
+    'Rent': '🏠',
+    'Transport': '🚗',
+    'Friends Transfer': '💸',
+    'Credit Card Bill': '💳',
+    'Family Transfer': '👨‍👩‍👧‍👦',
+    'Gold Digital': '🪙',
+    'Golgappe': '🥟',
+    'Grocery': '🛒',
+    'Investement': '📈',
+    'Medical': '💊',
+    'Mobile Recharge': '📱',
+    'Online Shopping': '🛍️',
+    'Smoke': '🚬',
+  };
 
   @override
   void initState() {
@@ -462,10 +519,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
       'Balance',
     ];
     _columnVisibility = {for (var col in _allPossibleColumns) col: true};
-    _dataGridSource = TransactionDataGridSource(
-      transactions: [],
-      bankType: widget.bankType,
-    );
+    _dataGridSource = TransactionDataGridSource(transactions: []);
     _fetchInitialData();
   }
 
@@ -500,7 +554,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
         .collection('users')
         .doc(userId)
         .collection(collectionName)
-        .orderBy('timestamp', descending: true)
+        .orderBy('transactionTimestamp', descending: true)
         .get();
 
     final transactions = snapshot.docs.map((doc) {
@@ -525,9 +579,10 @@ class _BankDataScreenState extends State<BankDataScreen> {
       filtered = filtered
           .where(
             (t) =>
-                _parseDate(
-                  t['DATE']?.toString() ?? t['date']?.toString(),
-                )?.year.toString() ==
+                (t['transactionTimestamp'] as Timestamp?)
+                    ?.toDate()
+                    .year
+                    .toString() ==
                 _selectedYear,
           )
           .toList();
@@ -535,9 +590,10 @@ class _BankDataScreenState extends State<BankDataScreen> {
       filtered = filtered
           .where(
             (t) =>
-                _parseDate(
-                  t['DATE']?.toString() ?? t['date']?.toString(),
-                )?.month.toString() ==
+                (t['transactionTimestamp'] as Timestamp?)
+                    ?.toDate()
+                    .month
+                    .toString() ==
                 _selectedMonth,
           )
           .toList();
@@ -545,46 +601,38 @@ class _BankDataScreenState extends State<BankDataScreen> {
       filtered = filtered
           .where(
             (t) =>
-                _parseDate(
-                  t['DATE']?.toString() ?? t['date']?.toString(),
-                )?.day.toString() ==
+                (t['transactionTimestamp'] as Timestamp?)
+                    ?.toDate()
+                    .day
+                    .toString() ==
                 _selectedDay,
           )
           .toList();
-    if (_selectedCategory != null)
+    if (_selectedCategory != null) {
       filtered = filtered
-          .where((t) => t['parsed']?['category'] == _selectedCategory)
+          .where((t) => t['category'] == _selectedCategory)
           .toList();
-    if (_selectedSubCategory != null)
-      filtered = filtered
-          .where((t) => t['parsed']?['subCategory'] == _selectedSubCategory)
-          .toList();
-    if (_selectedType == 'Credit')
-      filtered = filtered
-          .where(
-            (t) =>
-                (double.tryParse(
-                      t['DEPOSIT']?.toString() ??
-                          t['credit']?.toString() ??
-                          '0',
-                    ) ??
-                    0) >
-                0,
-          )
-          .toList();
-    if (_selectedType == 'Debit')
-      filtered = filtered
-          .where(
-            (t) =>
-                (double.tryParse(
-                      t['WITHDRWAL']?.toString() ??
-                          t['debit']?.toString() ??
-                          '0',
-                    ) ??
-                    0) >
-                0,
-          )
-          .toList();
+    }
+    if (_selectedSubCategory != null) {
+      if (_selectedSubCategory == 'Uncategorized') {
+        filtered = filtered.where((t) {
+          final sc = t['subCategory']?.toString();
+          return sc == null || sc == 'N/A' || sc == 'Uncategorized';
+        }).toList();
+      } else {
+        filtered = filtered
+            .where((t) => t['subCategory'] == _selectedSubCategory)
+            .toList();
+      }
+    }
+    if (_selectedVpa != null) {
+      filtered = filtered.where((t) => t['vpa'] == _selectedVpa).toList();
+    }
+    if (_selectedType == 'Credit') {
+      filtered = filtered.where((t) => (t['credit'] as num? ?? 0) > 0).toList();
+    } else if (_selectedType == 'Debit') {
+      filtered = filtered.where((t) => (t['debit'] as num? ?? 0) > 0).toList();
+    }
     _filteredTransactions = filtered;
     _currentPage = 0;
     _paginateTransactions();
@@ -602,27 +650,16 @@ class _BankDataScreenState extends State<BankDataScreen> {
           : _filteredTransactions.sublist(startIndex, endIndex);
       _dataGridSource = TransactionDataGridSource(
         transactions: _paginatedTransactions,
-        bankType: widget.bankType,
       );
     });
   }
 
   String _generateUniqueKey(Map<String, dynamic> t) {
-    if (widget.bankType == 'ipbp')
-      return [
-        (t['parsed']?['upiId'] ?? 'N/A').toString(),
-        (t['DATE'] ?? '').toString(),
-        (t['TRANSACTION PARTICULARS'] ?? '').toString(),
-        (double.tryParse(t['BALANCE']?.toString() ?? '0') ?? 0).toStringAsFixed(
-          2,
-        ),
-      ].join('|');
     return [
-      (t['date'] ?? '').toString(),
+      (t['transactionDate'] ?? '').toString(),
       (t['description'] ?? '').toString(),
-      (double.tryParse(t['debit']?.toString() ?? '0') ?? 0).toString(),
-      (double.tryParse(t['credit']?.toString() ?? '0') ?? 0).toString(),
-      (double.tryParse(t['balance']?.toString() ?? '0') ?? 0).toString(),
+      (t['debit'] as num? ?? 0).toString(),
+      (t['credit'] as num? ?? 0).toString(),
     ].join('|');
   }
 
@@ -653,23 +690,31 @@ class _BankDataScreenState extends State<BankDataScreen> {
     final years =
         _allTransactions
             .map(
-              (t) => _parseDate(
-                t['DATE']?.toString() ?? t['date']?.toString(),
-              )?.year.toString(),
+              (t) => (t['transactionTimestamp'] as Timestamp?)
+                  ?.toDate()
+                  .year
+                  .toString(),
             )
             .where((y) => y != null)
             .toSet()
             .toList()
           ..sort();
     final categories = _allTransactions
-        .map((t) => t['parsed']?['category']?.toString())
+        .map((t) => t['category']?.toString())
         .where((c) => c != null)
         .toSet()
         .toList();
     final subCategories =
         _allTransactions
-            .map((t) => t['parsed']?['subCategory']?.toString())
+            .map((t) => t['subCategory']?.toString())
             .where((sc) => sc != null && sc != 'N/A' && sc != 'Uncategorized')
+            .toSet()
+            .toList()
+          ..sort();
+    final vpas =
+        _allTransactions
+            .map((t) => t['vpa']?.toString())
+            .where((vpa) => vpa != null && vpa != 'N/A')
             .toSet()
             .toList()
           ..sort();
@@ -716,8 +761,15 @@ class _BankDataScreenState extends State<BankDataScreen> {
                       label: "Sub-Category",
                       value: _selectedSubCategory,
                       items: subCategories.whereType<String>().toList(),
+                      specialItems: const ['Uncategorized'],
                       onChanged: (val) =>
                           setState(() => _selectedSubCategory = val),
+                    ),
+                    _buildFilterDropdown(
+                      label: "VPA",
+                      value: _selectedVpa,
+                      items: vpas.whereType<String>().toList(),
+                      onChanged: (val) => setState(() => _selectedVpa = val),
                     ),
                     _buildFilterDropdown(
                       label: "Type",
@@ -751,6 +803,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
                       _selectedDay = null;
                       _selectedCategory = null;
                       _selectedSubCategory = null;
+                      _selectedVpa = null;
                       _selectedType = null;
                     });
                     _applyFilters();
@@ -775,6 +828,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
     String? value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    List<String> specialItems = const [],
   }) {
     return DropdownButtonFormField<String>(
       value: value,
@@ -783,9 +837,15 @@ class _BankDataScreenState extends State<BankDataScreen> {
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-          .toList(),
+      items: [
+        const DropdownMenuItem(value: null, child: Text("All")),
+        ...specialItems.map(
+          (item) => DropdownMenuItem(value: item, child: Text(item)),
+        ),
+        ...items.map(
+          (item) => DropdownMenuItem(value: item, child: Text(item)),
+        ),
+      ],
       onChanged: onChanged,
     );
   }
@@ -935,17 +995,12 @@ class _BankDataScreenState extends State<BankDataScreen> {
     }
 
     for (var t in _filteredTransactions) {
-      final debit =
-          double.tryParse(
-            t['WITHDRWAL']?.toString() ?? t['debit']?.toString() ?? '0',
-          ) ??
-          0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final date = _parseDate(t['DATE']?.toString() ?? t['date']?.toString());
+        final date = (t['transactionTimestamp'] as Timestamp?)?.toDate();
         if (date != null) {
           final timeKey = timeKeyFormatter(date);
-          final subCategory =
-              t['parsed']?['subCategory']?.toString() ?? 'Uncategorized';
+          final subCategory = t['subCategory']?.toString() ?? 'Uncategorized';
           if (subCategory != 'N/A') {
             aggregatedData.putIfAbsent(timeKey, () => {});
             aggregatedData[timeKey]![subCategory] =
@@ -1046,31 +1101,17 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Widget _buildStatsAndTrendCard() {
     double totalCredit = _filteredTransactions.fold(
       0,
-      (sum, t) =>
-          sum +
-          (double.tryParse(
-                t['DEPOSIT']?.toString() ?? t['credit']?.toString() ?? '0',
-              ) ??
-              0),
+      (sum, t) => sum + (t['credit'] as num? ?? 0),
     );
     double totalDebit = _filteredTransactions.fold(
       0,
-      (sum, t) =>
-          sum +
-          (double.tryParse(
-                t['WITHDRWAL']?.toString() ?? t['debit']?.toString() ?? '0',
-              ) ??
-              0),
+      (sum, t) => sum + (t['debit'] as num? ?? 0),
     );
     Map<String, double> monthlySpending = {};
     for (var t in _filteredTransactions) {
-      final debit =
-          double.tryParse(
-            t['WITHDRWAL']?.toString() ?? t['debit']?.toString() ?? '0',
-          ) ??
-          0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final date = _parseDate(t['DATE']?.toString() ?? t['date']?.toString());
+        final date = (t['transactionTimestamp'] as Timestamp?)?.toDate();
         if (date != null) {
           final monthKey = DateFormat('yyyy-MM').format(date);
           monthlySpending[monthKey] = (monthlySpending[monthKey] ?? 0) + debit;
@@ -1167,13 +1208,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Map<String, double> _calculateSpendingByCategory() {
     Map<String, double> data = {};
     for (var t in _filteredTransactions) {
-      final debit =
-          double.tryParse(
-            t['WITHDRWAL']?.toString() ?? t['debit']?.toString() ?? '0',
-          ) ??
-          0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final category = t['parsed']?['category']?.toString() ?? 'Other';
+        final category = t['category']?.toString() ?? 'Other';
         data[category] = (data[category] ?? 0) + debit;
       }
     }
@@ -1183,13 +1220,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Map<String, double> _calculateIncomeByCategory() {
     Map<String, double> data = {};
     for (var t in _filteredTransactions) {
-      final credit =
-          double.tryParse(
-            t['DEPOSIT']?.toString() ?? t['credit']?.toString() ?? '0',
-          ) ??
-          0;
+      final credit = (t['credit'] as num? ?? 0).toDouble();
       if (credit > 0) {
-        final category = t['parsed']?['category']?.toString() ?? 'Other';
+        final category = t['category']?.toString() ?? 'Other';
         data[category] = (data[category] ?? 0) + credit;
       }
     }
@@ -1199,14 +1232,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Map<String, double> _calculateSpendingBySubCategory() {
     Map<String, double> data = {};
     for (var t in _filteredTransactions) {
-      final debit =
-          double.tryParse(
-            t['WITHDRWAL']?.toString() ?? t['debit']?.toString() ?? '0',
-          ) ??
-          0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final subCategory =
-            t['parsed']?['subCategory']?.toString() ?? 'Uncategorized';
+        final subCategory = t['subCategory']?.toString() ?? 'Uncategorized';
         if (subCategory != 'N/A') {
           data[subCategory] = (data[subCategory] ?? 0) + debit;
         }
@@ -1218,9 +1246,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Map<String, double> _calculateSpendingByVpa() {
     Map<String, double> data = {};
     for (var t in _filteredTransactions) {
-      final debit = double.tryParse(t['WITHDRWAL']?.toString() ?? '0') ?? 0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final vpa = t['parsed']?['vpa']?.toString();
+        final vpa = t['vpa']?.toString();
         if (vpa != null && vpa != 'N/A') {
           data[vpa] = (data[vpa] ?? 0) + debit;
         }
@@ -1232,9 +1260,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Map<String, double> _calculateSpendingByParticulars() {
     Map<String, double> data = {};
     for (var t in _filteredTransactions) {
-      final debit = double.tryParse(t['debit']?.toString() ?? '0') ?? 0;
+      final debit = (t['debit'] as num? ?? 0).toDouble();
       if (debit > 0) {
-        final particular = t['parsed']?['name']?.toString();
+        final particular = t['particulars']?.toString();
         if (particular != null && particular != 'N/A') {
           data[particular] = (data[particular] ?? 0) + debit;
         }
@@ -1277,9 +1305,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
 
   Widget _buildSpendingByParticularsCard() {
     return _buildGenericChartCard(
-      title: "Spending by Particulars",
-      chartKey: 'spendingByParticulars',
-      data: _calculateSpendingByParticulars(),
+      title: "Spending by VPA",
+      chartKey: 'spendingByVpa', // Re-use the same key as IPBP for consistency
+      data: _calculateSpendingByVpa(),
     );
   }
 
@@ -1291,7 +1319,16 @@ class _BankDataScreenState extends State<BankDataScreen> {
     final sortedData = data.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    final displayData = sortedData.take(50).toList();
+    final List<MapEntry<String, double>> dataWithEmojis;
+    if (chartKey == 'spendingBySubCategory') {
+      dataWithEmojis = sortedData.map((e) {
+        final emoji = _subCategoryEmojiMap[e.key] ?? '📁';
+        return MapEntry('$emoji ${e.key}', e.value);
+      }).toList();
+    } else {
+      dataWithEmojis = sortedData;
+    }
+    final displayData = dataWithEmojis.take(50).toList();
 
     return Card(
       child: Padding(
@@ -1485,7 +1522,6 @@ class _BankDataScreenState extends State<BankDataScreen> {
     final visibleColumns = _allPossibleColumns
         .where((col) => _columnVisibility[col] ?? false)
         .toList();
-
     return Card(
       child: Column(
         children: [
@@ -1505,9 +1541,8 @@ class _BankDataScreenState extends State<BankDataScreen> {
                   switch (colName) {
                     case 'Date':
                       return 100;
-                    case 'Original Particulars':
-                    case 'Original Description':
-                    case 'Parsed Particulars':
+                    case 'Description':
+                    case 'Particulars':
                       return 250;
                     case 'Category':
                     case 'Sub-Category':
@@ -1658,9 +1693,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
   Future<void> _showCategorizationDialog(
     Map<String, dynamic> transaction,
   ) async {
-    final mappingKey = widget.bankType == 'ipbp'
-        ? (transaction['parsed']?['vpa'])
-        : (transaction['parsed']?['name']);
+    final mappingKey = transaction['vpa'] as String?;
     if (mappingKey == null || mappingKey == 'N/A') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1670,9 +1703,9 @@ class _BankDataScreenState extends State<BankDataScreen> {
       return;
     }
 
-    String? selectedSubCategory = transaction['parsed']?['subCategory'] == 'N/A'
+    String? selectedSubCategory = transaction['subCategory'] == 'N/A'
         ? null
-        : transaction['parsed']?['subCategory'];
+        : transaction['subCategory'];
     final newCategoryController = TextEditingController();
     bool isAddingNew = false;
 
@@ -1758,10 +1791,7 @@ class _BankDataScreenState extends State<BankDataScreen> {
     String subCategory,
   ) async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
-    final mappingCollectionName = widget.bankType == 'ipbp'
-        ? 'ipbp_vpa_subcategory_mappings'
-        : 'sbi_name_subcategory_mappings';
-    final mappingField = widget.bankType == 'ipbp' ? 'vpa' : 'name';
+    final mappingCollectionName = '${widget.bankType}_vpa_subcategory_mappings';
 
     final mappingRef = FirebaseFirestore.instance
         .collection('artifacts')
@@ -1770,16 +1800,13 @@ class _BankDataScreenState extends State<BankDataScreen> {
         .doc(userId)
         .collection(mappingCollectionName);
     final query = await mappingRef
-        .where(mappingField, isEqualTo: mappingKey)
+        .where('vpa', isEqualTo: mappingKey)
         .limit(1)
         .get();
     if (query.docs.isNotEmpty) {
       await query.docs.first.reference.update({'subCategory': subCategory});
     } else {
-      await mappingRef.add({
-        mappingField: mappingKey,
-        'subCategory': subCategory,
-      });
+      await mappingRef.add({'vpa': mappingKey, 'subCategory': subCategory});
     }
 
     // Background update
@@ -1791,14 +1818,12 @@ class _BankDataScreenState extends State<BankDataScreen> {
         .doc(userId)
         .collection(transactionCollectionName);
     final snapshot = await transactionRef
-        .where('parsed.$mappingField', isEqualTo: mappingKey)
+        .where('vpa', isEqualTo: mappingKey)
         .get();
 
     final batch = FirebaseFirestore.instance.batch();
     for (var doc in snapshot.docs) {
-      final updatedParsed = Map<String, dynamic>.from(doc.data()['parsed']);
-      updatedParsed['subCategory'] = subCategory;
-      batch.update(doc.reference, {'parsed': updatedParsed});
+      batch.update(doc.reference, {'subCategory': subCategory});
     }
     await batch.commit();
   }
